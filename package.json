@@ -1,6 +1,6 @@
 {
   "name": "error-overflow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Instantly translate cryptic Node.js errors into simple, actionable explanations for humans.",
   "main": "src/index.js",
   "exports": "./src/index.js",
@@ -27,8 +27,5 @@
   ],
   "author": "Pratham Ranka",
   "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "nodemon": "^3.1.11"
-  }
+  "type": "module"
 }

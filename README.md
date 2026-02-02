@@ -10,6 +10,7 @@ A lightweight, zero-dependency library that instantly translates cryptic Node.js
 - [Why Use This?](#why-use-this)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Architecture & Best Practices](#architecture--best-practices)
 - [Features](#features)
 - [Safety & Stability](#safety--stability)
 - [License](#license)
@@ -58,7 +59,25 @@ npm install error-overflow
 
 ## Usage
 
-The library exports a single function: `explainError(error, context)`.
+The library exports two main functions: `explainError` for manual handling and `initGlobalErrors` for automatic handling.
+
+### Global Setup (Recommended)
+
+Catch all unhandled errors automatically at the start of your application.
+
+```javascript
+import { initGlobalErrors } from "error-overflow";
+
+// Call this once at the top of your entry file
+initGlobalErrors();
+
+// Now any unhandled error will be explained automatically!
+throw new Error("Something went wrong");
+```
+
+### Manual Usage
+
+Use `explainError(error, context)` to handle specific errors.
 
 ### Basic Example
 
@@ -90,6 +109,52 @@ try {
   console.log(explainError(err, { user }));
 }
 ```
+
+## Architecture & Best Practices
+
+Choose the right integration strategy for your application's needs.
+
+### 1. Global Handler (`initGlobalErrors`)
+
+**Use Case:** 🛑 **CRASH & REPORT**
+
+Designed for catching unexpected, unrecoverable errors. It intercepts the crash, prints a human-readable report, and then cleanly exits the process.
+
+> **Goal:** Transform a cryptic stack trace into a helpful crash report.
+
+```mermaid
+graph LR
+    A[Application Error] -->|Uncaught| B(Global Handler)
+    B --> C{Analyzer}
+    C -->|Match Found| D[Human Explanation]
+    C -->|No Match| E[Generic Safety Report]
+    D --> F((Process Exit 1))
+    E --> F
+```
+
+### 2. Manual Handler (`explainError`)
+
+**Use Case:** 🛡️ **RECOVER & CONTINUE**
+
+Designed for expected errors where the application should stay alive (e.g., API failures, user input validation).
+
+> **Goal:** Gracefully handle errors without downtime.
+
+```javascript
+try {
+  await database.connect();
+} catch (err) {
+  console.error(explainError(err)); // Log and keep running
+  retryConnection();
+}
+```
+
+| Feature      | Global Handler (`initGlobalErrors`) | Manual Handler (`explainError`)    |
+| :----------- | :---------------------------------- | :--------------------------------- |
+| **Trigger**  | Uncaught Exception / Rejection      | `catch (err)` block                |
+| **Outcome**  | Logs explanation & **Exits App**    | Returns string & **Continues App** |
+| **Best For** | Final safety net, CLI tools         | Critical services, UI feedback     |
+| **Context**  | Limited (Global Scope)              | Rich (Local Scope variables)       |
 
 ## Features
 
