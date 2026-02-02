@@ -1,4 +1,4 @@
-import { explainError } from "./src/index.js";
+import { explainError } from "../src/index.js";
 
 try {
   throw new Error("random failure");

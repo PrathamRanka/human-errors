@@ -67,6 +67,8 @@ try {
 
 - **Missing Dependencies**: Tells you exactly what to `npm install`.
 - **Typos**: "Variable `usr` not defined" → "Did you mean `user`?" (fuzzy matching).
+- **Missing Await**: Detects when you try to access properties of a Promise that wasn't awaited.
+- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns to cover all bases.
 - **JSON Errors**: Explains _why_ your JSON failed (trailing commas, missing quotes).
 - **Common Bugs**: Handles `EADDRINUSE`, `EACCES`, `undefined` properties, and more.
 

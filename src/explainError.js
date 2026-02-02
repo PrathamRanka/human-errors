@@ -8,6 +8,8 @@ export function explainError(error, context = {}) {
   const err = error instanceof Error ? error : new Error(String(error));
   const analysis = analyzeError(err, context);
 
+  const matches = [];
+
   for (const matcher of matchers) {
     try {
       let isMatch = false;
@@ -30,13 +32,37 @@ export function explainError(error, context = {}) {
         }
 
         if (explanation && typeof explanation === 'object') {
-          explanation.confidence = analysis.confidence;
+          explanation.confidence = explanation.confidence || analysis.confidence || 0;
+          matches.push(explanation);
         }
-        return formatExplanation(explanation, err);
       }
     } catch (e) {
-      // ignore matcher errors and continue to fallback
+   
     }
+  }
+
+  if (matches.length > 0) {
+   
+    matches.sort((a, b) => b.confidence - a.confidence);
+
+    if (matches.length === 1) {
+      return formatExplanation(matches[0], err);
+    }
+
+    // Merge multiple matches
+    const combinedExplanation = {
+      title: matches.map(m => m.title).join(" / "), // Combine titles
+      happened: matches.map(m => m.happened).filter(Boolean).join("\n\nOR\n\n"),
+      causes: matches.flatMap(m => m.causes || []),
+      actions: matches.flatMap(m => m.actions || []),
+      confidence: matches[0].confidence
+    };
+
+    
+    combinedExplanation.causes = [...new Set(combinedExplanation.causes)];
+    combinedExplanation.actions = [...new Set(combinedExplanation.actions)];
+
+    return formatExplanation(combinedExplanation, err);
   }
 
   return formatExplanation(
