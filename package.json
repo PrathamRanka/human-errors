@@ -1,14 +1,28 @@
 {
-  "name": "human-errors",
+  "name": "error-overflow",
   "version": "1.0.0",
-  "description": "",
+  "description": "Instantly translate cryptic Node.js errors into simple, actionable explanations for humans.",
   "main": "src/index.js",
+  "exports": "./src/index.js",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "node tests/verify.js"
+    "test": "node tests/verify.js",
+    "prepublishOnly": "npm test"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "error-handling",
+    "debugging",
+    "developer-tools",
+    "node",
+    "errors",
+    "human-readable"
+  ],
+  "author": "Pratham Ranka",
   "license": "ISC",
   "type": "module",
   "dependencies": {

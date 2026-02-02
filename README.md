@@ -1,26 +1,30 @@
-# human-errors
+# error-overflow
 
-![License](https://img.shields.io/npm/l/human-errors) ![Version](https://img.shields.io/npm/v/human-errors?style=flat-square) ![Stars](https://img.shields.io/github/stars/human-errors?style=social)
+![License](https://img.shields.io/npm/l/error-overflow) ![Version](https://img.shields.io/npm/v/error-overflow?style=flat-square) ![Stars](https://img.shields.io/github/stars/human-errors?style=social)
+
+**Errors for Humans, not Robots.**  
+A lightweight (zero-dependency) library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
+
+---
 
 ## What is this?
 
-**Errors for Humans, not Robots.**  
-A lightweight library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
+`error-overflow` intercepts raw Node.js errors—like `MODULE_NOT_FOUND` or confusing `undefined` ValueErrors—and converts them into a beautiful, structured report that tells you **what happened**, **property causes**, and **how to fix it**.
 
 ## Why should I care?
 
-Node.js errors are often technical and unhelpful. `human-errors` fixes that.
+Because stack traces are focused on _where_ code broke, not _how_ to fix it.
 
 **Before:**
 
-```
+```text
 Error: MODULE_NOT_FOUND
 Error: Cannot find module 'axios'
 ```
 
-**After `human-errors`:**
+**After `error-overflow`:**
 
-```
+```text
 Missing Module
 
 What happened
@@ -38,7 +42,7 @@ Try this
 ## How do I install it?
 
 ```bash
-npm install human-errors
+npm install error-overflow
 ```
 
 ## How do I use it in 30 seconds?
@@ -46,7 +50,7 @@ npm install human-errors
 Just wrap your error logging with `explainError`.
 
 ```javascript
-import { explainError } from "human-errors";
+import { explainError } from "error-overflow";
 
 try {
   await doSomethingRisky();
@@ -66,7 +70,7 @@ It exports a single main function `explainError(error, context)` that runs your 
 - **Missing Dependencies**: Tells you exactly what to `npm install`.
 - **Typos**: "Variable `usr` not defined" → "Did you mean `user`?" (fuzzy matching).
 - **Missing Await**: Detects when you try to access properties of a Promise that wasn't awaited.
-- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns.
+- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns to cover all bases.
 - **JSON Errors**: Explains _why_ your JSON failed (trailing commas, missing quotes).
 - **Common Bugs**: Handles `EADDRINUSE`, `EACCES`, `undefined` properties, and more.
 
