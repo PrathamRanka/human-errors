@@ -10,8 +10,25 @@ export function explainError(error, context = {}) {
 
   for (const matcher of matchers) {
     try {
-      if (typeof matcher.match === 'function' && matcher.match(analysis)) {
-        const explanation = typeof matcher.explain === 'function' ? matcher.explain(analysis) : {};
+      let isMatch = false;
+      try {
+        if (typeof matcher.match === 'function') {
+           isMatch = matcher.match(analysis);
+        }
+      } catch (err) {
+        continue;
+      }
+
+      if (isMatch) {
+        let explanation = {};
+        try {
+          if (typeof matcher.explain === 'function') {
+            explanation = matcher.explain(analysis) || {};
+          }
+        } catch (err) {
+          continue;
+        }
+
         if (explanation && typeof explanation === 'object') {
           explanation.confidence = analysis.confidence;
         }
