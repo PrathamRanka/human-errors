@@ -15,10 +15,13 @@
     "prepublishOnly": "npm test"
   },
   "keywords": [
+    "node",
+    "javascript",
+    "typescript",
+    "npm",
     "error-handling",
     "debugging",
     "developer-tools",
-    "node",
     "errors",
     "human-readable"
   ],
