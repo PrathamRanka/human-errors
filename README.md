@@ -1,28 +1,37 @@
 # error-overflow
 
-![License](https://img.shields.io/npm/l/error-overflow) ![Version](https://img.shields.io/npm/v/error-overflow?style=flat-square) ![Stars](https://img.shields.io/github/stars/human-errors?style=social)
+**Errors for Humans, not Robots.**
 
-**Errors for Humans, not Robots.**  
-A lightweight (zero-dependency) library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
+A lightweight, zero-dependency library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Why Use This?](#why-use-this)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Features](#features)
+- [Safety & Stability](#safety--stability)
+- [License](#license)
 
 ---
 
-## What is this?
+## Introduction
 
-`error-overflow` intercepts raw Node.js errors—like `MODULE_NOT_FOUND` or confusing `undefined` ValueErrors—and converts them into a beautiful, structured report that tells you **what happened**, **property causes**, and **how to fix it**.
+Node.js errors are often technical and focused on the stack trace rather than the solution. `error-overflow` intercepts these raw errors—such as `MODULE_NOT_FOUND`, `EADDRINUSE`, or confusing `undefined` property access—and converts them into a structured report.
 
-## Why should I care?
+It does not hide the original error; it augments it with context, probable causes, and suggested fixes.
 
-Because stack traces are focused on _where_ code broke, not _how_ to fix it.
+## Why Use This?
 
-**Before:**
+Standard Error Output:
 
 ```text
 Error: MODULE_NOT_FOUND
 Error: Cannot find module 'axios'
 ```
 
-**After `error-overflow`:**
+With error-overflow:
 
 ```text
 Missing Module
@@ -31,23 +40,29 @@ What happened
 Node.js could not find 'axios'.
 
 Likely causes
-• The package is not installed
-• The path to the file is incorrect
+- The package is not installed
+- The path to the file is incorrect
 
 Try this
-• Run 'npm install axios'
-• Check your package.json dependencies
+- Run 'npm install axios'
+- Check your package.json dependencies
 ```
 
-## How do I install it?
+## Installation
+
+Install the package via npm:
 
 ```bash
 npm install error-overflow
 ```
 
-## How do I use it in 30 seconds?
+## Usage
 
-Just wrap your error logging with `explainError`.
+The library exports a single function: `explainError(error, context)`.
+
+### Basic Example
+
+Wrap your error logging logic with `explainError`.
 
 ```javascript
 import { explainError } from "error-overflow";
@@ -55,37 +70,44 @@ import { explainError } from "error-overflow";
 try {
   await doSomethingRisky();
 } catch (err) {
-  // 1. Pass the error object
+  // Pass the error object to get a formatted string
   console.log(explainError(err));
-
-  // 2. (Optional) Pass context for smarter suggestions (like typo detection)
-  // console.log(explainError(err, { userObject, config }));
 }
 ```
 
-## What exactly does it expose?
+### Advanced Example (Context)
 
-It exports a single main function `explainError(error, context)` that runs your error through a suite of specific matchers:
+You can pass a context object as the second argument. This allows the library to provide smarter suggestions, such as fuzzy matching for variable names.
 
-- **Missing Dependencies**: Tells you exactly what to `npm install`.
-- **Typos**: "Variable `usr` not defined" → "Did you mean `user`?" (fuzzy matching).
-- **Missing Await**: Detects when you try to access properties of a Promise that wasn't awaited.
-- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns to cover all bases.
-- **JSON Errors**: Explains _why_ your JSON failed (trailing commas, missing quotes).
-- **Common Bugs**: Handles `EADDRINUSE`, `EACCES`, `undefined` properties, and more.
+```javascript
+const user = { name: "Alice" };
 
-## Will it break my app?
+try {
+  // Typo: 'usr' is not defined
+  console.log(usr.name);
+} catch (err) {
+  // Pass available variables to help the matching algorithm
+  console.log(explainError(err, { user }));
+}
+```
 
-**No.** It is designed to be **safe and crash-proof**:
+## Features
 
-- It guarantees to **never** throw an error itself.
-- If it fails to match an error, it falls back to a safe "Unrecognized error" generic message.
-- It validates inputs so your error handler doesn't cause _more_ errors.
+- **Missing Dependencies**: Identifies missing packages and suggests installation commands.
+- **Typos**: Detects ReferenceErrors and suggests the correct variable name using fuzzy matching.
+- **Missing Await**: Detects attempts to access properties of a Promise that was not awaited.
+- **Multi-Cause Analysis**: Aggregates insights from multiple matching patterns when an error is ambiguous.
+- **JSON Errors**: Provides detailed explanations for parsing failures, such as trailing commas or missing quotes.
+- **System Errors**: Handles common system codes like `EADDRINUSE` (Port in use) and `EACCES` (Permission denied).
 
-## Can I contribute?
+## Safety & Stability
 
-Yes! We want to cover every painful error in the Node.js ecosystem. PRs are welcome.
+This library is designed to be crash-proof in production environments.
 
-## Is this maintained?
+1.  **Zero Throw Guarantee**: The `explainError` function will never throw an exception.
+2.  **Fallback Mechanism**: If an error cannot be matched to a known pattern, it falls back to a generic, safe explanation.
+3.  **Input Validation**: All inputs are validated to ensure the error handler does not introduce new bugs.
 
-Yes. This project is actively maintained.
+## License
+
+ISC
