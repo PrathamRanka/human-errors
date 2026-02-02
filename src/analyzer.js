@@ -3,7 +3,7 @@ export function analyzeError(error, context = {}){
     const stack = error?.stack || "";
     const name = error?.name || "Error"
     const code = error?.code
-}
+
 
 return { name, message, stack, code , context,
 
@@ -21,5 +21,6 @@ return { name, message, stack, code , context,
       inUserCode: !stack.includes("node_modules"),
 
       missingEnv: !process.env.DATABASE_URL
+     }
     }
 }
