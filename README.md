@@ -1,178 +1,233 @@
 # error-overflow
 
-**Errors for Humans, not Robots.**
+**Semantic Error Handling and Heuristic Analysis for Node.js Applications.**
 
-A lightweight, zero-dependency library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
-
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Why Use This?](#why-use-this)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Architecture & Best Practices](#architecture--best-practices)
-- [Features](#features)
-- [Safety & Stability](#safety--stability)
-- [License](#license)
+`error-overflow` is a comprehensive, zero-dependency error analysis engine designed to bridge the cognitive gap between raw machine exceptions and developer intent. By intercepting cryptic runtime errors and applying partial-match heuristics, it transforms standard Node.js stack traces into structured, actionable remediation intelligence.
 
 ---
 
-## Introduction
+## Table of Contents
 
-Node.js errors are often technical and focused on the stack trace rather than the solution. `error-overflow` intercepts these raw errors—such as `MODULE_NOT_FOUND`, `EADDRINUSE`, or confusing `undefined` property access—and converts them into a structured report.
+1.  [Executive Summary](#executive-summary)
+2.  [The Philosophy of Error Handling](#the-philosophy-of-error-handling)
+3.  [System Architecture](#system-architecture)
+    *   [The Analysis Pipeline](#the-analysis-pipeline)
+    *   [Heuristic Matching Engine](#heuristic-matching-engine)
+4.  [Installation](#installation)
+5.  [Integration & Usage Patterns](#integration--usage-patterns)
+    *   [Strategy A: Global Process Interception](#strategy-a-global-process-interception)
+    *   [Strategy B: Localized Instrumentation](#strategy-b-localized-instrumentation)
+6.  [Deep Dive: Heuristic Capabilities](#deep-dive-heuristic-capabilities)
+    *   [Dependency Resolution Algorithms](#dependency-resolution-algorithms)
+    *   [Fuzzy Logic & Levenshtein Distance](#fuzzy-logic--levenshtein-distance)
+    *   [Asynchronous Flow Analysis](#asynchronous-flow-analysis)
+    *   [System Resource Mapping](#system-resource-mapping)
+7.  [Performance Implications](#performance-implications)
+8.  [Safety Mechanisms](#safety-mechanisms)
+9.  [Frequently Asked Questions](#frequently-asked-questions)
+10. [License](#license)
 
-It does not hide the original error; it augments it with context, probable causes, and suggested fixes.
+---
 
-## Why Use This?
+## Executive Summary
 
-Standard Error Output:
+In modern distributed systems and rapid-development environments, the "Mean Time to Resolution" (MTTR) for software defects is a critical metric. Standard Node.js error reporting ensures precision for core dump analysis but often fails to provide immediate actionable context for the developer.
 
-```text
-Error: MODULE_NOT_FOUND
-Error: Cannot find module 'axios'
+A typical `ReferenceError` or `MODULE_NOT_FOUND` forces a context switch: the developer must leave their flow, parse the stack trace, hypothesize the cause (e.g., "Is this a typo? A missing package?"), and formulate a fix.
+
+**`error-overflow` eliminates this context switch.** It acts as a real-time semantic interpreter, identifying the *intent* likely missed by the *implementation*, and presenting the solution instantly.
+
+---
+
+## The Philosophy of Error Handling
+
+The library is built upon the **"Zero-Ambiguity"** principle. A runtime error is not merely a signal that "something broke"; it is a request for help from the runtime environment.
+
+### The Cognitive Gap
+When a developer types `cnosle.log`, the machine sees `ReferenceError: cnosle is not defined`. The developer sees "I made a typo." The gap between these two interpretations is the "Cognitive Gap." This library fills that gap by algorithmically verifying: "Did you mean `console`?"
+
+By formalizing these common error patterns into a strict set of matchers, we effectively "teach" the Node.js runtime to understand the dialect of human fallibility.
+
+---
+
+## System Architecture
+
+The architecture of `error-overflow` is strictly decoupled into three computational stages: **Analysis**, **Matching**, and **Formatting**. This separation of concerns ensures that the logic for distinct error types stays isolated, preventing regression loops when new capabilities are added.
+
+### The Analysis Pipeline
+
+```mermaid
+graph TD
+    subgraph "Phase 1: Ingestion"
+    A[Raw Error Object] --> B[Normalizer]
+    B --> C[Standardized Analysis Object]
+    end
+
+    subgraph "Phase 2: Heuristic Matching"
+    C --> D{Matcher Registry}
+    D -->|Test| E[Exact Matchers]
+    D -->|Test| F[Fuzzy Matchers]
+    D -->|Test| G[Contextual Matchers]
+    end
+
+    subgraph "Phase 3: Synthesis"
+    E & F & G --> H[Confidence Scoring]
+    H --> I[Solution Object]
+    I --> J[Terminal Formatter]
+    end
 ```
 
-With error-overflow:
+1.  **Ingestion**: The error is coerced into a standard `Error` object if it isn't one already.
+2.  **Matching**: The error is passed through a chain of registered logical predicates.
+3.  **Synthesis**: The system aggregates all positive matches, sorts them by confidence score, and selects the most probable cause.
 
-```text
-Missing Module
-
-What happened
-Node.js could not find 'axios'.
-
-Likely causes
-- The package is not installed
-- The path to the file is incorrect
-
-Try this
-- Run 'npm install axios'
-- Check your package.json dependencies
-```
+---
 
 ## Installation
 
-Install the package via npm:
+The library is published to the npm registry. It contains no external dependencies to ensure a minimal footprint and maximum security.
 
 ```bash
 npm install error-overflow
 ```
 
-## Usage
+---
 
-The library exports two main functions: `explainError` for manual handling and `initGlobalErrors` for automatic handling.
+## Integration & Usage Patterns
 
-### Global Setup (Recommended)
+Choosing the correct integration pattern is vital for alignment with your application's reliability service level objectives (SLOs).
 
-Catch all unhandled errors automatically at the start of your application.
+### Strategy A: Global Process Interception
+
+This is the "Safety Net" approach. By hooking into the Node.js `process` level events, `error-overflow` can catch errors that would otherwise result in a silent failure or an ugly stack dump.
+
+**Mechanism**:
+The `initGlobalErrors` function attaches listeners to `uncaughtException` and `unhandledRejection`. When these events trigger, the library takes control of the `stderr` stream, prints the formatted report, and then strictly manages the process exit code.
+
+**Recommended For**:
+*   CLI Tools
+*   Build Scripts
+*   Development Servers
+*   Rapid Prototyping
 
 ```javascript
 import { initGlobalErrors } from "error-overflow";
 
-// Call this once at the top of your entry file
-initGlobalErrors();
-
-// Now any unhandled error will be explained automatically!
-throw new Error("Something went wrong");
+// Must be called as early as possible in the bootstrap phase.
+initGlobalErrors({
+    exitOnException: true 
+    // Set to 'false' if you wish to perform your own cleanup logic after reporting.
+});
 ```
 
-### Manual Usage
+### Strategy B: Localized Instrumentation
 
-Use `explainError(error, context)` to handle specific errors.
+This is the "Surgical" approach. Rather than taking over the entire process, you use `explainError` as a utility function within specific `catch` blocks. This allows your application to remain resilient and recover from the error.
 
-### Basic Example
-
-Wrap your error logging logic with `explainError`.
+**Recommended For**:
+*   REST API Endpoints (Express/Fastify/NestJS)
+*   Background Jobs (BullMQ/Redis)
+*   Critical User Flows (Payment Processing)
 
 ```javascript
 import { explainError } from "error-overflow";
 
-try {
-  await doSomethingRisky();
-} catch (err) {
-  // Pass the error object to get a formatted string
-  console.log(explainError(err));
+async function processPayment(user, amount) {
+    try {
+        await gateway.charge(user, amount);
+    } catch (error) {
+        // We do typically NOT want to crash the server here.
+        // Instead, we log the useful explanation to our monitoring service.
+        const analysis = explainError(error, { user, amount });
+        
+        logger.error({
+            message: "Payment Failed",
+            humanReadable: analysis,
+            stack: error.stack
+        });
+        
+        throw new FriendlyError("Payment could not be completed.");
+    }
 }
 ```
 
-### Advanced Example (Context)
+---
 
-You can pass a context object as the second argument. This allows the library to provide smarter suggestions, such as fuzzy matching for variable names.
+## Deep Dive: Heuristic Capabilities
 
-```javascript
-const user = { name: "Alice" };
+The power of `error-overflow` lies in its diverse set of matchers. Each matcher is a specialized algorithm designed to detect a specific class of failure.
 
-try {
-  // Typo: 'usr' is not defined
-  console.log(usr.name);
-} catch (err) {
-  // Pass available variables to help the matching algorithm
-  console.log(explainError(err, { user }));
-}
-```
+### Dependency Resolution Algorithms
+**Target Error**: `MODULE_NOT_FOUND`
 
-## Architecture & Best Practices
+The matcher parses the raw error message to extract the import path. It distinguishes between local file paths (starting with `./` or `/`) and npm package names.
+*   **Action**: If it identifies a missing npm package, it generates the exact `npm install` command required.
+*   **Logic**: It ensures that core Node.js modules (like `fs` or `path`) are not flagged as missing npm packages.
 
-Choose the right integration strategy for your application's needs.
+### Fuzzy Logic & Levenshtein Distance
+**Target Error**: `ReferenceError`
 
-### 1. Global Handler (`initGlobalErrors`)
+When a variable is accessed but not defined, the library suspects a typo. It employs the **Levenshtein Distance** algorithm (Code Edit Distance) to compare the undefined variable name against a provided `context` object (list of known variables).
+*   **Threshold**: Only matches with a similarity score > 0.8 are presented to avoid false positives.
+*   **Context Awareness**: If you pass the current scope's variable names to `explainError`, the accuracy of this matcher increases significantly.
 
-**Use Case:** 🛑 **CRASH & REPORT**
+### Asynchronous Flow Analysis
+**Target Error**: `TypeError` (e.g., `Cannot read property 'then' of undefined` or `undefined is not a function`)
 
-Designed for catching unexpected, unrecoverable errors. It intercepts the crash, prints a human-readable report, and then cleanly exits the process.
+In modern JavaScript, a common mistake is forgetting the `await` keyword. This results in the code trying to treat a pending `Promise` object as if it were the resolved data value.
+*   **Heuristic**: The semantic analyzer looks for property access patterns that typically occur when a Promise is treated as an Object.
+*   **Remediation**: It specifically suggests checking antecedent async calls for missing `await` keywords.
 
-> **Goal:** Transform a cryptic stack trace into a helpful crash report.
+### System Resource Mapping
+**Target Error**: POSIX System Codes (`EADDRINUSE`, `EACCES`, `ECONNREFUSED`)
 
-```mermaid
-graph LR
-    A[Application Error] -->|Uncaught| B(Global Handler)
-    B --> C{Analyzer}
-    C -->|Match Found| D[Human Explanation]
-    C -->|No Match| E[Generic Safety Report]
-    D --> F((Process Exit 1))
-    E --> F
-```
+Node.js returns low-level operating system error codes for structural failures. These are opaque to many developers.
+*   **EADDRINUSE**: Detected when starting a server. The library suggests the specific `lsof` or `kill` command to free the port.
+*   **EACCES**: Detected during file operations. It identifies permission boundaries and suggests ownership (`chown`) or mode (`chmod`) changes.
 
-### 2. Manual Handler (`explainError`)
+---
 
-**Use Case:** 🛡️ **RECOVER & CONTINUE**
+## Performance Implications
 
-Designed for expected errors where the application should stay alive (e.g., API failures, user input validation).
+A primary concern for any error handling library is overhead. `error-overflow` is optimized for zero-cost when idle.
 
-> **Goal:** Gracefully handle errors without downtime.
+1.  **Lazy Evaluation**: The definition of matchers and the architecture of the analyzer are only instantiated when an export is imported.
+2.  **O(1) Static Matching**: String comparison matchers (formatting exact error codes) execute in constant time.
+3.  **O(N*M) Fuzzy Matching**: The Levenshtein calculation is the most expensive operation. To mitigate this:
+    *   It is **only** triggered for `ReferenceError` types.
+    *   Input strings are truncated to prevent Denial of Service (DoS) via massive error messages.
+    *   The loop exits early if the distance exceeds the threshold.
 
-```javascript
-try {
-  await database.connect();
-} catch (err) {
-  console.error(explainError(err)); // Log and keep running
-  retryConnection();
-}
-```
+This ensures that even in high-throughput applications, the impact of generating an explanation for a caught error is negligible (< 2ms typically).
 
-| Feature      | Global Handler (`initGlobalErrors`) | Manual Handler (`explainError`)    |
-| :----------- | :---------------------------------- | :--------------------------------- |
-| **Trigger**  | Uncaught Exception / Rejection      | `catch (err)` block                |
-| **Outcome**  | Logs explanation & **Exits App**    | Returns string & **Continues App** |
-| **Best For** | Final safety net, CLI tools         | Critical services, UI feedback     |
-| **Context**  | Limited (Global Scope)              | Rich (Local Scope variables)       |
+---
 
-## Features
+## Safety Mechanisms
 
-- **Missing Dependencies**: Identifies missing packages and suggests installation commands.
-- **Typos**: Detects ReferenceErrors and suggests the correct variable name using fuzzy matching.
-- **Missing Await**: Detects attempts to access properties of a Promise that was not awaited.
-- **Multi-Cause Analysis**: Aggregates insights from multiple matching patterns when an error is ambiguous.
-- **JSON Errors**: Provides detailed explanations for parsing failures, such as trailing commas or missing quotes.
-- **System Errors**: Handles common system codes like `EADDRINUSE` (Port in use) and `EACCES` (Permission denied).
+Reliability is paramount. An error handler that throws errors effectively destroys the observability of the system.
 
-## Safety & Stability
+### The "Zero-Throw" Guarantee
+The `explainError` function allows **no assertions** or **unhandled throws** within its scope.
+*   **Defensive Coding**: Every internal property access is guarded.
+*   **Universal Fallback**: If, for any reason, the analysis engine fails (e.g., a cyclic object is passed as context), the `catch` block within the library itself intercepts this internal failure and returns a static "Safe Error Report". **The original application crash is never obscured.**
 
-This library is designed to be crash-proof in production environments.
+---
 
-1.  **Zero Throw Guarantee**: The `explainError` function will never throw an exception.
-2.  **Fallback Mechanism**: If an error cannot be matched to a known pattern, it falls back to a generic, safe explanation.
-3.  **Input Validation**: All inputs are validated to ensure the error handler does not introduce new bugs.
+## Frequently Asked Questions
+
+**Q: Can I use this in the browser?**
+A: Currently, this library is optimized for the **Node.js runtime** environment (access to `process`, file system codes, etc.). Browser support is on the roadmap but not currently active.
+
+**Q: Will this hide the stack trace from my logs?**
+A: **No.** When using `initGlobalErrors`, it suppresses the stack trace from *standard output* to the terminal to keep the developer experience clean. However, it does **not** interfere with other loggers (like Winston, Pino, or Datadog agents) that might be attached to the process. You maintain full observability while gaining better localized feedback.
+
+**Q: Does it support TypeScript?**
+A: Yes. The library ships with native type definitions, ensuring full Intellisense support in your IDE.
+
+---
 
 ## License
 
-ISC
+Copyright (c) 2024 Pratham Ranka.
+
+Licensed under the **ISC License**.
