@@ -6,8 +6,12 @@ import { jsonParseMatcher } from "./jsonParse.js";
 import { portInUseMatcher } from "./portInUse.js";
 import { moduleNotFoundMatcher } from "./moduleNotFound.js";
 import { unknownVariableMatcher } from "./unknownVariable.js";
+import { permissionDeniedMatcher } from "./permissionDenied.js";
+import { missingAwaitMatcher } from "./missingAwait.js";
 
 export const matchers = [
+  missingAwaitMatcher,
+  permissionDeniedMatcher,
   moduleNotFoundMatcher,
   unknownVariableMatcher,
   undefinedPropMatcher,
