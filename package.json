@@ -1,6 +1,6 @@
 {
   "name": "error-overflow",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Instantly translate cryptic Node.js errors into simple, actionable explanations for humans.",
   "main": "src/index.js",
   "exports": "./src/index.js",
