@@ -1,15 +1,15 @@
-# human-errors ODBA
-
-**Errors for Humans, not Robots.**  
-Instantly translate cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
+# human-errors
 
 ![License](https://img.shields.io/npm/l/human-errors) ![Version](https://img.shields.io/npm/v/human-errors?style=flat-square) ![Stars](https://img.shields.io/github/stars/human-errors?style=social)
 
----
+## What is this?
 
-## Why?
+**Errors for Humans, not Robots.**  
+A lightweight library that instantly translates cryptic Node.js errors into simple, actionable explanations with specific "Try this" fixes.
 
-Node.js errors are often technical and unhelpful.
+## Why should I care?
+
+Node.js errors are often technical and unhelpful. `human-errors` fixes that.
 
 **Before:**
 
@@ -35,15 +35,13 @@ Try this
 • Check your package.json dependencies
 ```
 
----
-
-## Installation
+## How do I install it?
 
 ```bash
 npm install human-errors
 ```
 
-## Usage
+## How do I use it in 30 seconds?
 
 Just wrap your error logging with `explainError`.
 
@@ -53,46 +51,37 @@ import { explainError } from "human-errors";
 try {
   await doSomethingRisky();
 } catch (err) {
-  // Pass the error object
+  // 1. Pass the error object
   console.log(explainError(err));
 
-  // OPTIONAL: Pass context for smarter suggestions (like typo detection)
+  // 2. (Optional) Pass context for smarter suggestions (like typo detection)
   // console.log(explainError(err, { userObject, config }));
 }
 ```
 
-## Features
+## What exactly does it expose?
 
-### 🚀 Smart Fixes
+It exports a single main function `explainError(error, context)` that runs your error through a suite of specific matchers:
 
 - **Missing Dependencies**: Tells you exactly what to `npm install`.
 - **Typos**: "Variable `usr` not defined" → "Did you mean `user`?" (fuzzy matching).
 - **Missing Await**: Detects when you try to access properties of a Promise that wasn't awaited.
-- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns to cover all bases.
+- **Multi-Cause Analysis**: If an error is ambiguous, it combines insights from multiple patterns.
 - **JSON Errors**: Explains _why_ your JSON failed (trailing commas, missing quotes).
 - **Common Bugs**: Handles `EADDRINUSE`, `EACCES`, `undefined` properties, and more.
 
-### 🎨 Beautiful Output
+## Will it break my app?
 
-- Minimal ANSI coloring (Red titles, Green fixes).
-- Automatically falls back to plain text if color is not supported.
+**No.** It is designed to be **safe and crash-proof**:
 
-### 🛡️ Crash-Proof
+- It guarantees to **never** throw an error itself.
+- If it fails to match an error, it falls back to a safe "Unrecognized error" generic message.
+- It validates inputs so your error handler doesn't cause _more_ errors.
 
-- Guaranteed to **never** throw an error itself.
-- Validates inputs so your error handler doesn't cause _more_ errors.
+## Can I contribute?
 
-## Supported Errors (Partial List)
+Yes! We want to cover every painful error in the Node.js ecosystem. PRs are welcome.
 
-- `MODULE_NOT_FOUND`: Import errors.
-- `ReferenceError`: Typos and scope issues.
-- `SyntaxError`: Specifically for JSON.parse.
-- `EADDRINUSE`: Port conflicts.
-- `EACCES` / `EPERM`: Permission issues.
-- `TypeError`: Undefined properties (e.g., trying to `.map` undefined).
+## Is this maintained?
 
----
-
-## Contributing
-
-We want to cover every painful error in the Node.js ecosystem. PRs are welcome!
+Yes. This project is actively maintained.
