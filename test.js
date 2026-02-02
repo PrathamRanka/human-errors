@@ -1,9 +1,12 @@
+// test.js
 import { explainError } from "./src/index.js";
 
+console.log("test.js running");
+
 try {
-  const err = new Error("connect ECONNREFUSED 127.0.0.1:5432");
-  err.code = "ECONNREFUSED";
-  throw err;
+  throw new Error("random failure");
 } catch (e) {
-  console.log(explainError(e));
+  const result = explainError(e);
+  console.log("TYPE:", typeof result);
+  console.log(result);
 }

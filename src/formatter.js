@@ -1,17 +1,21 @@
-export function formatExplanation(explain, error){
-    return 
-    `
-    ${explain.title}
+export function formatExplanation(explain = {}, error = '') {
+  const title = explain.title || "Error";
+  const happened = explain.happened || "";
+  const causes = Array.isArray(explain.causes) ? explain.causes : [];
+  const actions = Array.isArray(explain.actions) ? explain.actions : [];
+  const original = error && (error.message || error.code) ? (error.message || error.code) : String(error || "");
 
-    What happened
-    ${explain.happened}
+  return `${title}
 
-    Likely causes
-    ${explain.causes.map(c => `• ${c}`).join("\n")}
+What happened
+${happened}
 
-    Try this
-    ${explain.actions.map(a => `• ${a}`).join("\n")}
+Likely causes
+${causes.map(c => `• ${c}`).join("\n")}
 
-    Original error
-    ${error.message || error.code || error}`.trim()
+Try this
+${actions.map(a => `• ${a}`).join("\n")}
+
+Original error
+${original}`.trim();
 }
